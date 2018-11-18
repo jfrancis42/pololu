@@ -15,3 +15,7 @@ sample app called servo.c included that illustrates how to use the
 library.
 
 It's better than writing this yourself from scratch, right?
+
+Update: It now builds a shared library so I can use it from Common
+Lisp using CFFI (which doesn't change anything about the way you'd use
+it, otherwise).

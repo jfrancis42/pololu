@@ -8,8 +8,7 @@
 #include "libpololu.h"
 /*
  * Supply serial port, azimuth and elevation on the command line.
- * Note that az/el are not degrees, they're percentage of travel
- * (though I plan on changing that at some point in the future).
+ * Note that az/el are not degrees, they're percentage of travel.
  * Speed is a value between 1 and 127.
  */
 int main(int argc, char *argv[]) {

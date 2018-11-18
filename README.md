@@ -19,3 +19,34 @@ It's better than writing this yourself from scratch, right?
 Update: It now builds a shared library so I can use it from Common
 Lisp using CFFI (which doesn't change anything about the way you'd use
 it, otherwise).
+
+Here's how to do that:
+
+```
+CL-USER> (ql:quickload :cffi)
+To load "cffi":
+  Load 1 ASDF system:
+    cffi
+; Loading "cffi"
+.
+(:CFFI)
+CL-USER> (in-package :cffi)
+#<PACKAGE "CFFI">
+CFFI> (define-foreign-library pololu (:unix "/tmp/pololu/libpololu.so"))
+POLOLU
+CFFI> (use-foreign-library pololu)
+#<FOREIGN-LIBRARY POLOLU "libpololu.so">
+CFFI> (defcfun "open_serial" :int (device :string))
+OPEN-SERIAL
+CFFI> (defcfun "set_servo_speed" :int (fd :int) (servo :int) (speed :int))
+SET-SERVO-SPEED
+CFFI> (defcfun "set_servo_position" :int (fd :int) (servo :int) (percent :int))
+SET-SERVO-POSITION
+CFFI> (defparameter *fd* (open-serial "/dev/ttyS0"))
+*FD*
+CFFI> (set-servo-speed *fd* 0 63)
+0
+CFFI> (set-servo-position *fd* 0 42)
+0
+CFFI> 
+```

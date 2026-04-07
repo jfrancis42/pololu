@@ -1,52 +1,74 @@
 # pololu
-C library to talk to a Pololu serial servo controller.
 
-I originally wrote this in 2009 to control a homemade az/el rotator
-made out of r/c airplane servos with a webcam on top. Along with some
-crufty CGI scripts, it allowed a remote user to control the camera and
-take pictures of my office.
+C library for communicating with Pololu serial servo controllers (tested with
+the SSC03A). Supports all 8 channels. Originally written in 2009 to drive a
+homemade az/el rotator made from RC airplane servos with a webcam on top.
 
-While the az/el controller is long gone, I just ran across this code
-and thought it might be useful to somebody somewhere.
+## Building
 
-While I haven't gotten 'round to documenting it yet (and let's be
-honest, I might never get around to that), there's at least a simple
-sample app called servo.c included that illustrates how to use the
-library.
+```sh
+make
+```
 
-It's better than writing this yourself from scratch, right?
+This produces:
 
-Update: It now builds a shared library so I can use it from Common
-Lisp using CFFI (which doesn't change anything about the way you'd use
-it, otherwise).
+- `libpololu.a` — static library
+- `libpololu.so` / `libpololu.so.1` — shared library
+- `servo` — command-line example
 
-Here's how to do that:
+## Usage
+
+### Command-line tool
 
 ```
-CL-USER> (ql:quickload :cffi)
-To load "cffi":
-  Load 1 ASDF system:
-    cffi
-; Loading "cffi"
-.
-(:CFFI)
-CL-USER> (in-package :cffi)
-#<PACKAGE "CFFI">
-CFFI> (define-foreign-library pololu (:unix "/tmp/pololu/libpololu.so"))
-POLOLU
-CFFI> (use-foreign-library pololu)
-#<FOREIGN-LIBRARY POLOLU "libpololu.so">
-CFFI> (defcfun "open_serial" :int (device :string))
-OPEN-SERIAL
-CFFI> (defcfun "set_servo_speed" :int (fd :int) (servo :int) (speed :int))
-SET-SERVO-SPEED
-CFFI> (defcfun "set_servo_position" :int (fd :int) (servo :int) (percent :int))
-SET-SERVO-POSITION
-CFFI> (defparameter *fd* (open-serial "/dev/ttyS0"))
-*FD*
-CFFI> (set-servo-speed *fd* 0 63)
-0
-CFFI> (set-servo-position *fd* 0 42)
-0
-CFFI> 
+./servo <serial_device> <speed> <servo0> [servo1 ...]
 ```
+
+- `serial_device`: path to the serial port (e.g. `/dev/ttyUSB0`)
+- `speed`: 1–127, where 1 is fastest and 127 is slowest
+- `servoN`: position as percent of travel (0.0–100.0)
+
+Example — move servo 0 to 50% at speed 63:
+
+```sh
+./servo /dev/ttyUSB0 63 50.0
+```
+
+### C API
+
+```c
+#include "libpololu.h"
+
+int fd = open_serial("/dev/ttyUSB0");
+set_servo_speed(fd, 0, 63);       // servo 0, medium speed
+set_servo_position(fd, 0, 50);    // servo 0, center
+close(fd);
+```
+
+All three functions return 0 on success and a negative value on error.
+
+### Common Lisp (CFFI)
+
+```lisp
+(ql:quickload :cffi)
+(in-package :cffi)
+
+(define-foreign-library pololu (:unix "/path/to/libpololu.so"))
+(use-foreign-library pololu)
+
+(defcfun "open_serial"        :int (device :string))
+(defcfun "set_servo_speed"    :int (fd :int) (servo :int) (speed :int))
+(defcfun "set_servo_position" :int (fd :int) (servo :int) (percent :int))
+
+(defparameter *fd* (open-serial "/dev/ttyUSB0"))
+(set-servo-speed    *fd* 0 63)
+(set-servo-position *fd* 0 42)
+```
+
+## Notes
+
+Servo position timing is calculated as 500–4000 half-microsecond units (250us–2000us).
+This range works well with Futaba FP-S148 servos; you may need to adjust the
+constants in `libpololu.c` for other servos.
+
+The hardware guide for the SSC03A is in `docs/ssc03a_guide.pdf`.

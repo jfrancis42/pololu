@@ -1,2 +1,11 @@
-.DS_Store
+# Compiled artifacts
+*.o
+*.a
+*.so
+*.so.*
+servo
 
+# Editor artifacts
+*~
+.DS_Store
+.vscode/
